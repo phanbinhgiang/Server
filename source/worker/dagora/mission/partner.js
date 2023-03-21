@@ -6,7 +6,13 @@ export default class PartnerWorker {
     const {
       page = 1, size = 10, key
     } = req.query
-    const partners = await Partner.find({ partnerName: { $regex: key, $options: 'i' } })
+
+    const matchQuery = {}
+    if (key) {
+      matchQuery.partnerName = { $regex: key, $options: 'i' }
+    }
+
+    const partners = await Partner.find(matchQuery)
       .sort({ createdAt: -1 })
       .skip((parseInt(page) - 1) * parseInt(size)).limit(parseInt(size))
       .lean()
@@ -33,16 +39,16 @@ export default class PartnerWorker {
       partnerDescription
     } = req.body
 
+    const missingRequireField = checkInvalidRequireField(['partnerName', 'partnerLogo', 'partnerDescription'], { partnerName, partnerLogo, partnerDescription })
+    if (missingRequireField) {
+      req.response = { errMess: `missingRequireField:${missingRequireField}` }
+      return next()
+    }
+
     const id = createSlug(partnerName)
     const findPartner = await Partner.findOne({ id })
     if (findPartner) {
       req.response = { errMess: 'partnerExists' }
-      return next()
-    }
-
-    const missingRequireField = checkInvalidRequireField(['partnerName', 'partnerLogo', 'partnerDescription'], { partnerName, partnerLogo, partnerDescription })
-    if (missingRequireField) {
-      req.response = { errMess: `missingRequireField:${missingRequireField}` }
       return next()
     }
 

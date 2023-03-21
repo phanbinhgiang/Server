@@ -1,4 +1,4 @@
-import { createSchema, defaultModel } from '..'
+import { createSchema, defaultModel } from '../..'
 
 export default createSchema({
   nftProfileAddress: defaultModel.string,

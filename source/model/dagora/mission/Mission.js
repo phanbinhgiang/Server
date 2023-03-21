@@ -1,4 +1,4 @@
-import { createSchema, defaultModel } from '..'
+import { createSchema, defaultModel } from '../..'
 
 export default createSchema({
   id: defaultModel.stringUnique,
@@ -10,7 +10,7 @@ export default createSchema({
   rewardImageExample: defaultModel.string,
   rewardDescription: defaultModel.string,
   rewardUri: defaultModel.string,
-  total_rewards: defaultModel.number,
+  totalRewards: defaultModel.number,
   chain: defaultModel.string,
   startTime: defaultModel.date,
   endTime: defaultModel.date
