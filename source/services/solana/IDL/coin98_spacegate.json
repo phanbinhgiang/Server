@@ -1,0 +1,967 @@
+{
+  "version": "1.0.0",
+  "name": "coin98_spacegate",
+  "instructions": [
+    {
+      "name": "spacegate1",
+      "accounts": [
+        {
+          "name": "appData",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gate",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rootSigner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "recipient",
+          "type": "bytes"
+        },
+        {
+          "name": "gateCode",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "spacegate2",
+      "accounts": [
+        {
+          "name": "appData",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gate",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rootSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rootSignerToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "userToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "recipient",
+          "type": "bytes"
+        },
+        {
+          "name": "gateCode",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "paygate1",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "adminProfile",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "appData",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "checker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rootSigner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u128"
+        },
+        {
+          "name": "gateCode",
+          "type": "bytes"
+        },
+        {
+          "name": "recipients",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
+          "name": "amounts",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "recipientAccountOffset",
+          "type": "u16"
+        },
+        {
+          "name": "signatures",
+          "type": {
+            "vec": {
+              "defined": "SignatureTuple"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "paygate2",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "adminProfile",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "appData",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "checker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rootSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rootSignerToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u128"
+        },
+        {
+          "name": "gateCode",
+          "type": "bytes"
+        },
+        {
+          "name": "recipients",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
+          "name": "amounts",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "recipientAccountOffset",
+          "type": "u16"
+        },
+        {
+          "name": "signatures",
+          "type": {
+            "vec": {
+              "defined": "SignatureTuple"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "createGate",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "gate",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "derivationPath",
+          "type": "bytes"
+        },
+        {
+          "name": "isNative",
+          "type": "bool"
+        },
+        {
+          "name": "token",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "setGateFee",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "gate",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "claimFeeAmount",
+          "type": "u64"
+        },
+        {
+          "name": "systemFeePercent",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "setGateLimit",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "gate",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "minAmount",
+          "type": "u64"
+        },
+        {
+          "name": "maxAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "setGateStatus",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "gate",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "isActive",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "deleteGate",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "gate",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "createChecker",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "checker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "createAdminProfile",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "adminProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "address",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "setAdminProfile",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "adminProfile",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "isActive",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "createUserProfile",
+      "accounts": [
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "address",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "withdrawSol",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "appData",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rootSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdrawToken",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "appData",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rootSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "poolToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipientToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "createAppData",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "appData",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setAppData",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "appData",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "isActive",
+          "type": "bool"
+        },
+        {
+          "name": "threshold",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AppData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "signerNonce",
+            "type": "u8"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "threshold",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "code",
+            "type": "bytes"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "minAmount",
+            "type": "u64"
+          },
+          {
+            "name": "maxAmount",
+            "type": "u64"
+          },
+          {
+            "name": "isNative",
+            "type": "bool"
+          },
+          {
+            "name": "token",
+            "type": "publicKey"
+          },
+          {
+            "name": "claimFeeAmount",
+            "type": "u64"
+          },
+          {
+            "name": "systemFeePercent",
+            "type": "u16"
+          },
+          {
+            "name": "totalClaimFee",
+            "type": "u64"
+          },
+          {
+            "name": "totalSystemFee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaygateChecker",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "index",
+            "type": "u128"
+          },
+          {
+            "name": "data",
+            "type": {
+              "vec": "u128"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "totalTx",
+            "type": "u64"
+          },
+          {
+            "name": "totalFee",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "TransferTokenParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instruction",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignatureTuple",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "publicKey",
+            "type": "publicKey"
+          },
+          {
+            "name": "signature",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaygateChecksumParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u128"
+          },
+          {
+            "name": "gateCode",
+            "type": {
+              "defined": "&'aVec<u8>"
+            }
+          },
+          {
+            "name": "recipients",
+            "type": {
+              "defined": "&'aVec<Pubkey>"
+            }
+          },
+          {
+            "name": "amounts",
+            "type": {
+              "defined": "&'aVec<u64>"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AccountState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "Initialized"
+          },
+          {
+            "name": "Frozen"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "SpacegateEvent",
+      "fields": [
+        {
+          "name": "gateCode",
+          "type": "bytes",
+          "index": false
+        },
+        {
+          "name": "sender",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "recipient",
+          "type": "bytes",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "WithdrawSolEvent",
+      "fields": [
+        {
+          "name": "recipientAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "WithdrawTokenEvent",
+      "fields": [
+        {
+          "name": "recipientTokenAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "SetAppDataEvent",
+      "fields": [
+        {
+          "name": "isActive",
+          "type": "bool",
+          "index": false
+        },
+        {
+          "name": "threshold",
+          "type": "u8",
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidAccount",
+      "msg": "Spacegate: Invalid account"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidAmount",
+      "msg": "Spacegate: Invalid amount"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidGate",
+      "msg": "Spacegate: Invalid gate"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidInput",
+      "msg": "Spacegate: Invalid input"
+    },
+    {
+      "code": 6004,
+      "name": "Unauthorized",
+      "msg": "Spacegate: Unauthorized"
+    },
+    {
+      "code": 6005,
+      "name": "Unavailable",
+      "msg": "Spacegate: Unavailable"
+    }
+  ]
+}

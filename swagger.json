@@ -1,0 +1,206 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Swagger Document for API Of DAgora",
+    "contact": {},
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url":"https://internal.c98staging.dev/adapters",
+      "variables": {}
+    },
+    {
+      "url": "http://localhost:3031/adapters",
+      "variables": {}
+    }
+  ],
+  "paths": {
+    "/private/authen": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get authorization token for admin Account",
+        "operationId": "Get authorization token for admin Account",
+        "requestBody": {
+          "description": "Get token Authen for Account",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "example@coin98.finance"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/private/onchain": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get Authorization token in OnchainSignature for Address by PrivateKey and Chain",
+        "operationId": "Get Onchain signature for Address",
+        "requestBody": {
+          "description": "Get token Authen for Account",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "privateKey": {
+                    "type": "string",
+                    "example": "privateKey String"
+                  },
+                  "chain": {
+                    "type": "string",
+                    "example": "Chain name"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/dagora/activity": {
+      "post": {
+        "tags": [
+          "Listing NFT"
+        ],
+        "summary": "Create listing request for nft in DAgora",
+        "operationId": "create Activity ",
+        "parameters": [
+          {
+            "name": "onChainSignature",
+            "in": "header",
+            "description": "Authen Token to verified Address",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "requestBody": {
+          "description": "Data for listing NFT request in DAgora",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string",
+                    "example": "1234"
+                  },
+                  "chain": {
+                    "type": "string",
+                    "example": "matic"
+                  },
+                  "id": {
+                    "type": "string",
+                    "example": "matic"
+                  },
+                  "signature": {
+                    "type": "string",
+                    "example": "signature"
+                  },
+                  "signMessage": {
+                    "type": "string",
+                    "example": "signMessage"
+                  },
+                  "time": {
+                    "type": "number",
+                    "example": 123
+                  },
+                  "duration": {
+                    "type": "number",
+                    "example": 123
+                  },
+                  "amountUSD": {
+                    "type": "number",
+                    "example": 123
+                  },
+                  "tokens": {
+                    "type": "array",
+                    "example": [
+                      "tokenAddress"
+                    ]
+                  },
+                  "amount": {
+                    "type": "string",
+                    "example": "100000"
+                  },
+                  "tokenAddress": {
+                    "type": "string",
+                    "example": "tokenAddress"
+                  },
+                  "nonce": {
+                    "type": "string",
+                    "example": "10"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "securitySchemes": {
+      "httpBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "httpBearer": ""
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "API to get Authentication token for api in DAgora"
+    },
+    {
+      "name": "Listing NFT",
+      "description": "API for Listing NFT in DAgora marketplace"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./source",
+    "paths": {
+      "common/*": [
+        "./common/*"
+      ],
+      "worker/*": [
+        "./worker/*"
+      ],
+      "model/*": [
+        "./model/*"
+      ],
+      "middleware/*": [
+        "./middleware/*"
+      ],
+      "routes/*": [
+        "./routes/*"
+      ],
+      "services/*": [
+        "./services/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.js"
+  ]
+}
