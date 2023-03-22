@@ -7,17 +7,25 @@ export default class PartnerWorker {
       page = 1, size = 10, key
     } = req.query
 
-    const matchQuery = {}
+    const matchQuery = {
+      isActive: true
+    }
     if (key) {
       matchQuery.partnerName = { $regex: key, $options: 'i' }
     }
-
-    const partners = await Partner.find(matchQuery)
+    const totalData = await Partner.countDocuments(matchQuery)
+    const payload = await Partner.find(matchQuery)
       .sort({ createdAt: -1 })
       .skip(genSkipNum(page, size))
       .limit(parseInt(size))
       .lean()
-    req.response = partners
+
+    req.response = {
+      data: payload,
+      total: totalData,
+      totalPage: Math.ceil(totalData / parseInt(size)),
+      currentPage: parseInt(page)
+    }
     next()
   }
 

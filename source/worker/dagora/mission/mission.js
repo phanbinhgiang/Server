@@ -1,22 +1,35 @@
 import Mission from '../../../model/dagora/mission/Mission'
+import Partner from '../../../model/dagora/mission/Partner'
 import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum } from '../../function'
 
 export default class MissionWorker {
   static async getAllMission (req, res, next) {
     const {
-      page = 1, size = 10, key
+      page = 1, size = 10, key, chain
     } = req.query
-    const matchQuery = {}
+    const matchQuery = {
+      isActive: true
+    }
     if (key) {
       matchQuery.missionName = { $regex: key, $options: 'i' }
     }
+    if (chain) {
+      matchQuery.chain = chain
+    }
 
-    const missions = await Mission.find(matchQuery)
+    const totalData = await Mission.countDocuments(matchQuery)
+    const payload = await Mission.find(matchQuery)
       .sort({ createdAt: -1 })
       .skip(genSkipNum(page, size))
       .limit(parseInt(size))
       .lean()
-    req.response = missions
+
+    req.response = {
+      data: payload,
+      total: totalData,
+      totalPage: Math.ceil(totalData / parseInt(size)),
+      currentPage: parseInt(page)
+    }
     next()
   }
 
@@ -51,6 +64,13 @@ export default class MissionWorker {
     const missingRequireField = checkInvalidRequireField(requiredFields, req.body)
     if (missingRequireField) {
       req.response = { errMess: `missingRequireField:${missingRequireField}` }
+      return next()
+    }
+
+    const { partnerId } = req.body
+    const findPartnerId = await Partner.countDocuments({ _id: partnerId })
+    if (!findPartnerId) {
+      req.response = { errMess: 'notFoundPartnerId' }
       return next()
     }
 
