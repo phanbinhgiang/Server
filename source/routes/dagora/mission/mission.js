@@ -2,6 +2,7 @@ import express from 'express'
 import { MissionWorker } from '../../../worker'
 const router = express.Router()
 
+// Admin
 router.get('/admx/', MissionWorker.getAllMission)
 router.get('/admx/item/:id', MissionWorker.getMissionById)
 router.post('/admx', MissionWorker.createMission)

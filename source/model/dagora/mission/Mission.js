@@ -14,5 +14,8 @@ export default createSchema({
   chain: defaultModel.string,
   startTime: defaultModel.date,
   endTime: defaultModel.date,
-  isActive: defaultModel.boolean
+  isActive: defaultModel.boolean,
+  createdAt: defaultModel.date,
+  updatedAt: defaultModel.date
+
 }, 'Mission', null, null)

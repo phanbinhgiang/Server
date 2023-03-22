@@ -2,6 +2,7 @@ import express from 'express'
 import { MissionTaskWorker } from '../../../worker'
 const router = express.Router()
 
+// admin
 router.get('/admx/', MissionTaskWorker.getAllMissionTask)
 router.post('/admx', MissionTaskWorker.createMissionTask)
 router.put('/admx', MissionTaskWorker.updateMissionTask)
