@@ -13,5 +13,6 @@ export default createSchema({
   totalRewards: defaultModel.number,
   chain: defaultModel.string,
   startTime: defaultModel.date,
-  endTime: defaultModel.date
+  endTime: defaultModel.date,
+  isActive: defaultModel.boolean
 }, 'Mission', null, null)

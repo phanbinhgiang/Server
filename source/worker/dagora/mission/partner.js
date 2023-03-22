@@ -1,5 +1,5 @@
 import Partner from '../../../model/dagora/mission/Partner'
-import { checkInvalidRequireField, createSlug, genUpdate } from '../../function'
+import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum } from '../../function'
 
 export default class PartnerWorker {
   static async getAllPartner (req, res, next) {
@@ -14,7 +14,8 @@ export default class PartnerWorker {
 
     const partners = await Partner.find(matchQuery)
       .sort({ createdAt: -1 })
-      .skip((parseInt(page) - 1) * parseInt(size)).limit(parseInt(size))
+      .skip(genSkipNum(page, size))
+      .limit(parseInt(size))
       .lean()
     req.response = partners
     next()
@@ -62,6 +63,11 @@ export default class PartnerWorker {
       id,
       partnerName
     } = req.body
+
+    if (!id) {
+      req.response = { errMess: 'RequiredId' }
+      return next()
+    }
 
     if (partnerName) {
       const genSlug = createSlug(partnerName)

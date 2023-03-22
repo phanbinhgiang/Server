@@ -1,12 +1,11 @@
 import Mission from '../../../model/dagora/mission/Mission'
-import { checkInvalidRequireField, createSlug } from '../../function'
+import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum } from '../../function'
 
 export default class MissionWorker {
   static async getAllMission (req, res, next) {
     const {
       page = 1, size = 10, key
     } = req.query
-
     const matchQuery = {}
     if (key) {
       matchQuery.missionName = { $regex: key, $options: 'i' }
@@ -14,7 +13,8 @@ export default class MissionWorker {
 
     const missions = await Mission.find(matchQuery)
       .sort({ createdAt: -1 })
-      .skip((parseInt(page) - 1) * parseInt(size)).limit(parseInt(size))
+      .skip(genSkipNum(page, size))
+      .limit(parseInt(size))
       .lean()
     req.response = missions
     next()
@@ -33,21 +33,6 @@ export default class MissionWorker {
   }
 
   static async createMission (req, res, next) {
-    const {
-      partnerId,
-      collectionAddress,
-      missionName,
-      missionDescription,
-      missionAvatar,
-      rewardImageExample,
-      rewardDescription,
-      rewardUri,
-      totalRewards,
-      chain,
-      startTime,
-      endTime
-    } = req.body
-
     const requiredFields = [
       'partnerId',
       'collectionAddress',
@@ -58,91 +43,108 @@ export default class MissionWorker {
       'rewardDescription',
       'rewardUri',
       'totalRewards',
-      'chain'
-      // 'startTime',
-      // 'endTime'
+      'chain',
+      'startTime',
+      'endTime'
     ]
 
-    const body = {
-      partnerId,
-      collectionAddress,
-      missionName,
-      missionDescription,
-      missionAvatar,
-      rewardImageExample,
-      rewardDescription,
-      rewardUri,
-      totalRewards,
-      chain,
-      startTime,
-      endTime
-    }
-
-    const missingRequireField = checkInvalidRequireField(requiredFields, body)
-    console.log('🚀 ~ file: mission.js:82 ~ MissionWorker ~ createMission ~ missingRequireField:', missingRequireField)
+    const missingRequireField = checkInvalidRequireField(requiredFields, req.body)
     if (missingRequireField) {
       req.response = { errMess: `missingRequireField:${missingRequireField}` }
       return next()
     }
 
+    const { missionName } = req.body
     const id = createSlug(missionName)
     const findMission = await Mission.findOne({ id })
     if (findMission) {
-      req.response = { errMess: 'missionExists' }
+      req.response = { errMess: 'missionNameExists' }
       return next()
     }
 
+    const body = genUpdate(req.body, [
+      'partnerId',
+      'collectionAddress',
+      'missionName',
+      'missionDescription',
+      'missionAvatar',
+      'rewardImageExample',
+      'rewardDescription',
+      'rewardUri',
+      'totalRewards',
+      'chain',
+      'startTime',
+      'endTime'
+    ])
     const data = await Mission.create({ id, ...body })
     req.response = data
     next()
   }
 
-  // static async updatePartner (req, res, next) {
-  //   const {
-  //     id,
-  //     partnerName
-  //   } = req.body
+  static async updateMission (req, res, next) {
+    const {
+      id,
+      missionName
+    } = req.body
 
-  //   if (partnerName) {
-  //     const genSlug = createSlug(partnerName)
-  //     const countSlugExists = await Partner.countDocuments({ id: genSlug, _id: { $ne: id } })
-  //     if (countSlugExists) {
-  //       req.response = { errMess: 'slugExists' }
-  //       return next()
-  //     }
-  //   }
+    if (!id) {
+      req.response = { errMess: 'RequiredId' }
+      return next()
+    }
 
-  //   const findPartner = await Partner.findOne({ _id: id })
-  //   if (!findPartner) {
-  //     req.response = { errMess: 'notFoundPartner' }
-  //     return next()
-  //   }
+    if (missionName) {
+      const genSlug = createSlug(missionName)
+      const countSlugExists = await Mission.countDocuments({ id: genSlug, _id: { $ne: id } })
+      if (countSlugExists) {
+        req.response = { errMess: 'slugExists' }
+        return next()
+      }
+    }
 
-  //   const updatedFiled = genUpdate(req.body, ['partnerName', 'partnerLogo', 'partnerDescription'])
-  //   if (partnerName) {
-  //     updatedFiled.id = createSlug(partnerName)
-  //   }
+    const findMission = await Mission.findOne({ _id: id })
+    if (!findMission) {
+      req.response = { errMess: 'notFoundMission' }
+      return next()
+    }
 
-  //   await findPartner.updateOne(updatedFiled)
-  //   req.response = true
-  //   next()
-  // }
+    const updatedFiled = genUpdate(req.body, [
+      'partnerId',
+      'collectionAddress',
+      'missionName',
+      'missionDescription',
+      'missionAvatar',
+      'rewardImageExample',
+      'rewardDescription',
+      'rewardUri',
+      'totalRewards',
+      'chain',
+      'startTime',
+      'endTime'
+    ])
+    if (missionName) {
+      updatedFiled.id = createSlug(missionName)
+    }
 
-  // static async deletePartnerById (req, res, next) {
-  //   const { id } = req.params
-  //   const partner = await Partner.findOne({ _id: id })
-  //   if (!partner) {
-  //     req.response = { errMess: `notFoundDocumentId:${id}` }
-  //     return next()
-  //   }
+    await findMission.updateOne(updatedFiled)
+    req.response = true
+    next()
+  }
 
-  //   if (!partner.isActive) {
-  //     req.response = { errMess: 'documentIsDeleted' }
-  //     return next()
-  //   }
+  static async deleteMissionById (req, res, next) {
+    const { id } = req.params
+    const mission = await Mission.findOne({ _id: id })
+    if (!mission) {
+      req.response = { errMess: `notFoundDocumentId:${id}` }
+      return next()
+    }
 
-  //   await partner.updateOne({ isActive: false })
-  //   req.response = true
-  //   next()
-  // }
+    if (!mission.isActive) {
+      req.response = { errMess: 'documentIsDeleted' }
+      return next()
+    }
+
+    await mission.updateOne({ isActive: false })
+    req.response = true
+    next()
+  }
 }
