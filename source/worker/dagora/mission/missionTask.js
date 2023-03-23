@@ -35,7 +35,7 @@ export default class MissionWorker {
       'missionId',
       'taskTypeId',
       'order',
-      'taskContentId'
+      'taskContent'
     ]
 
     const missingRequireField = checkInvalidRequireField(requiredFields, req.body)
@@ -55,7 +55,7 @@ export default class MissionWorker {
       'missionId',
       'taskTypeId',
       'order',
-      'taskContentId'
+      'taskContent'
     ])
     const data = await MissionTask.create(body)
     req.response = data
@@ -77,7 +77,7 @@ export default class MissionWorker {
     }
 
     const { missionId } = req.body
-    if (missionId !== findMissionTask.missionId) {
+    if (missionId && missionId !== findMissionTask.missionId) {
       req.response = { errMess: 'missionIdInvalid' }
       return next()
     }
@@ -85,7 +85,7 @@ export default class MissionWorker {
     const updatedFiled = genUpdate(req.body, [
       'taskTypeId',
       'order',
-      'taskContentId',
+      'taskContent',
       'isActive'
     ])
 

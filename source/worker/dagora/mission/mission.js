@@ -2,12 +2,13 @@ import Mission from '../../../model/dagora/mission/Mission'
 import MissionTask from '../../../model/dagora/mission/MissionTask'
 import Partner from '../../../model/dagora/mission/Partner'
 import ParticipantsMission from '../../../model/dagora/mission/ParticipantsMission'
-import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum } from '../../function'
+import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum, getStatusTime } from '../../function'
+import { get } from 'lodash'
 
 export default class MissionWorker {
   static async getAllMission (req, res, next) {
     const {
-      page = 1, size = 10, key, chain, createdAt = -1, type, requirements, status
+      page = 1, size = 10, key, chain, createdAt = -1, type, requirements, status, userAddress
     } = req.query
 
     const matchQuery = {
@@ -23,18 +24,19 @@ export default class MissionWorker {
     }
 
     if (type) {
+      const currentTime = new Date()
       switch (type) {
       case 'active':
-        matchQuery.startTime = { $lte: new Date() }
-        matchQuery.endTime = { $gte: new Date() }
+        matchQuery.startTime = { $lte: currentTime }
+        matchQuery.endTime = { $gte: currentTime }
         break
 
       case 'upcoming':
-        matchQuery.startTime = { $gt: new Date() }
+        matchQuery.startTime = { $gt: currentTime }
         break
 
       case 'ended':
-        matchQuery.endTime = { $lt: new Date() }
+        matchQuery.endTime = { $lt: currentTime }
         break
 
       default:
@@ -69,10 +71,11 @@ export default class MissionWorker {
       matchQuery._id = { $in: missionTasks.map(task => task._id) }
     }
 
-    if (status) {
+    if (status && userAddress) {
       const participantsMissions = await ParticipantsMission.aggregate([
         {
           $match: {
+            nftProfileAddress: userAddress,
             status
           }
         },
@@ -103,14 +106,66 @@ export default class MissionWorker {
     }
 
     const totalData = await Mission.countDocuments(matchQuery)
-    const payload = await Mission.find(matchQuery)
+    const fieldsResponse = {
+      // id: 1,
+      // partnerId: 1,
+      // collectionAddress: 1,
+      missionName: 1,
+      // missionDescription: 1,
+      missionAvatar: 1,
+      rewardImageExample: 1,
+      // rewardDescription: 1,
+      // rewardUri: 1,
+      // totalRewards: 1,
+      chain: 1,
+      startTime: 1,
+      endTime: 1
+      // isActive: 1,
+      // createdAt: 1,
+      // updatedAt: 1
+    }
+    const payload = await Mission.find(matchQuery, fieldsResponse)
       .sort({ createdAt })
       .skip(genSkipNum(page, size))
       .limit(parseInt(size))
       .lean()
 
+    if (!payload.length) {
+      req.response = {
+        data: [],
+        total: 0,
+        totalPage: 0,
+        currentPage: parseInt(page)
+      }
+      return next()
+    }
+
+    const totalMissingTasks = await MissionTask.aggregate([
+      {
+        $match: {
+          missionId: { $in: payload.map(item => item._id.toString()) }
+        }
+      },
+      {
+        $group: {
+          _id: '$missionId',
+          total: { $sum: 1 }
+        }
+      }
+    ])
+
+    const payloadFormat = payload.map(item => ({
+      _id: item._id,
+      missionName: item.missionName,
+      missionAvatar: item.missionAvatar,
+      rewardImage: item.rewardImageExample,
+      chain: item.chain,
+      totalTasks: totalMissingTasks.length ? get(totalMissingTasks.find(task => task._id === item._id.toString()), 'total', 0) : 0,
+      status: getStatusTime(item.startTime, item.endTime)
+    }))
+
     req.response = {
-      data: payload,
+      data: payloadFormat,
       total: totalData,
       totalPage: Math.ceil(totalData / parseInt(size)),
       currentPage: parseInt(page)
@@ -120,13 +175,37 @@ export default class MissionWorker {
 
   static async getMissionById (req, res, next) {
     const { id } = req.params
-    const mission = await Mission.findOne({ _id: id })
+    const missionPromise = Mission.findOne({ _id: id, isActive: true })
+    const missionTasksPromise = MissionTask.find({ missionId: id }, { taskContent: 1 })
+    const participantsPromise = ParticipantsMission.countDocuments({ missionId: id })
+    const totalNftMintedPromise = ParticipantsMission.countDocuments({ missionId: id, minted: true })
+
+    const [mission, missionTasks, participants, totalNftMinted] = await Promise.all([missionPromise, missionTasksPromise, participantsPromise, totalNftMintedPromise])
 
     if (!mission) {
-      req.response = { errMess: `notFoundDocumentId:${id}` }
+      req.response = { errMess: `notFoundMissionId:${id}` }
       return next()
     }
-    req.response = mission
+    req.response = {
+      listTasks: {
+        data: missionTasks.length ? missionTasks.map(task => get(task, 'taskContent', [])) : [],
+        total: missionTasks.length || 0
+      },
+      status: getStatusTime(mission.startTime, mission.endTime),
+      missionName: mission.missionName,
+      missionAvatar: mission.missionAvatar,
+      startTime: mission.startTime,
+      endTime: mission.endTime,
+      chain: mission.chain,
+      contractAddress: mission.collectionAddress,
+      participants,
+      missionDescription: mission.missionDescription,
+      rewardDescription: mission.rewardDescription,
+      rewardImages: mission.rewardImageExample,
+      rewardUrl: mission.rewardUri,
+      totalNFT: mission.totalRewards,
+      totalNFTMinted: totalNftMinted
+    }
     next()
   }
 
@@ -252,39 +331,4 @@ export default class MissionWorker {
     req.response = true
     next()
   }
-
-  // User
-  // static async getAllMissionUser (req, res, next) {
-  //   const {
-  //     page = 1, size = 10, key, createAt = -1, chain, type, requirements, status, userAddress
-  //   } = req.query
-  //   const matchQuery = {
-  //     isActive: true
-  //   }
-  //   // if (key) {
-  //   //   matchQuery.missionName = { $regex: key, $options: 'i' }
-  //   // }
-  //   // if (chain) {
-  //   //   matchQuery.chain = chain
-  //   // }
-
-  //   // const listMissionId = await ParticipantsMission.find({ nftProfileAddress: userAddress }, { _id: 0, missionId: 1 }).lean()
-
-  //   // const totalData = await Mission.countDocuments(matchQuery)
-  //   // const payload = await Mission.find(matchQuery)
-  //   //   .sort({ createdAt: -1 })
-  //   //   .skip(genSkipNum(page, size))
-  //   //   .limit(parseInt(size))
-  //   //   .lean()
-
-  //   // req.response = {
-  //   //   data: payload,
-  //   //   total: totalData,
-  //   //   totalPage: Math.ceil(totalData / parseInt(size)),
-  //   //   currentPage: parseInt(page)
-  //   // }
-
-  //   req.response = participantsMissions
-  //   next()
-  // }
 }

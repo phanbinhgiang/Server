@@ -252,3 +252,14 @@ export const formatNumberBro = ({
   }
   return isReturnNaN ? textNa || 'N/A' : 0
 }
+
+export const getStatusTime = (startTime, endTime) => {
+  const currentTime = new Date()
+  if (currentTime < startTime) {
+    return 'upcoming'
+  } else if (currentTime > endTime) {
+    return 'ended'
+  } else {
+    return 'active'
+  }
+}
