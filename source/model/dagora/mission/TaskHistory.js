@@ -4,5 +4,7 @@ export default createSchema({
   nftProfileAddress: defaultModel.string,
   missionTasksId: defaultModel.string,
   tasksData: defaultModel.object,
-  updateTime: defaultModel.date
-}, 'TaskHistory', null, null)
+  updateTime: defaultModel.date,
+  isActive: defaultModel.boolean,
+  completed: defaultModel.booleanFalse
+}, '-TaskHistory', null, null)

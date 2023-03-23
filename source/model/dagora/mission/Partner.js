@@ -6,4 +6,4 @@ export default createSchema({
   partnerLogo: defaultModel.string,
   partnerDescription: defaultModel.string,
   isActive: defaultModel.boolean
-}, 'Partner', null, null)
+}, '-Partner', null, null)

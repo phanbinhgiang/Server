@@ -4,6 +4,7 @@ import Partner from '../../../model/dagora/mission/Partner'
 import ParticipantsMission from '../../../model/dagora/mission/ParticipantsMission'
 import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum, getStatusTime } from '../../function'
 import { get } from 'lodash'
+import TaskHistory from '../../../model/dagora/mission/TaskHistory'
 
 export default class MissionWorker {
   static async getAllMission (req, res, next) {
@@ -175,6 +176,7 @@ export default class MissionWorker {
 
   static async getMissionById (req, res, next) {
     const { id } = req.params
+    const { userAddress } = req.query
     const missionPromise = Mission.findOne({ _id: id, isActive: true })
     const missionTasksPromise = MissionTask.find({ missionId: id }, { taskContent: 1 })
     const participantsPromise = ParticipantsMission.countDocuments({ missionId: id })
@@ -186,11 +188,16 @@ export default class MissionWorker {
       req.response = { errMess: `notFoundMissionId:${id}` }
       return next()
     }
+    const tasks = {}
+    tasks.data = missionTasks.length ? missionTasks.map(task => ({ _id: task._id, ...get(task, 'taskContent', []) })) : []
+    tasks.totalTasks = missionTasks.length
+    if (userAddress && tasks.data.length) {
+      const userCompletedTasks = await TaskHistory.find({ nftProfileAddress: userAddress, completed: true, isActive: true }, { missionTasksId: 1 }).lean()
+      tasks.data = tasks.data.map(task => ({ ...task, completed: !!userCompletedTasks.find(item => item.missionTasksId === task._id.toString()) }))
+      tasks.totalTasksCompleted = tasks.data.filter(task => task.completed).length
+    }
     req.response = {
-      listTasks: {
-        data: missionTasks.length ? missionTasks.map(task => get(task, 'taskContent', [])) : [],
-        total: missionTasks.length || 0
-      },
+      tasks,
       status: getStatusTime(mission.startTime, mission.endTime),
       missionName: mission.missionName,
       missionAvatar: mission.missionAvatar,

@@ -9,4 +9,4 @@ export default createSchema({
   status: defaultModel.string,
   minted: defaultModel.booleanFalse
 
-}, 'ParticipantsMission', null, null)
+}, '-ParticipantsMission', null, null)

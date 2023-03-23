@@ -18,4 +18,4 @@ export default createSchema({
   createdAt: defaultModel.date,
   updatedAt: defaultModel.date
 
-}, 'Mission', null, null)
+}, '-Mission', null, null)

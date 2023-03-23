@@ -6,4 +6,4 @@ export default createSchema({
   order: defaultModel.string,
   taskContent: defaultModel.object,
   isActive: defaultModel.boolean
-}, 'MissionTask', null, null)
+}, '-MissionTask', null, null)

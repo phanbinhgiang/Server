@@ -13,4 +13,4 @@ export default createSchema({
   nftVerifiedId: defaultModel.string,
   isActive: defaultModel.boolean
 
-}, 'UserProfile', null, null)
+}, '-UserProfile', null, null)
