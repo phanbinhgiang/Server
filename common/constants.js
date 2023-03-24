@@ -5552,3 +5552,12 @@ export const CarnivalRule = {
 </html>
 `
 }
+
+export const COLLECTION_NAME = {
+  Mission: '-missions',
+  MissionTask: '-missiontasks',
+  ParticipantsMission: '-participantsmissions',
+  Partner: '-partners',
+  TaskHistory: '-taskhistories',
+  UserProfile: '-userprofiles'
+}

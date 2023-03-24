@@ -2,11 +2,11 @@ import Mission from '../../../model/dagora/mission/Mission'
 import MissionTask from '../../../model/dagora/mission/MissionTask'
 import Partner from '../../../model/dagora/mission/Partner'
 import ParticipantsMission from '../../../model/dagora/mission/ParticipantsMission'
-import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum, getStatusTime } from '../../function'
+import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum, getStatusTime, ObjectId } from '../../function'
 import { get } from 'lodash'
 import TaskHistory from '../../../model/dagora/mission/TaskHistory'
 import { CHECK_STATUS } from '../../constants'
-
+import { COLLECTION_NAME } from '../../../../common/constants'
 export default class MissionWorker {
   static async setupMissionAndTasks (req, res, next) {
     const { inSequence, mission, tasks } = req.body
@@ -367,19 +367,43 @@ export default class MissionWorker {
   static async getMissionById (req, res, next) {
     const { id } = req.params
     const { userAddress } = req.query
-    const missionPromise = Mission.findOne({ _id: id, isActive: true })
-    const missionTasksPromise = MissionTask.find({ missionId: id }, { taskContent: 1 })
+    const missionPromise = await Mission.aggregate([
+      {
+        $match: { _id: new ObjectId(id), isActive: true }
+      },
+      {
+        $lookup: {
+          from: COLLECTION_NAME.MissionTask,
+          let: { refId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$missionId', { $toString: '$$refId' }] }
+              }
+            },
+            {
+              $project: {
+                order: 1,
+                taskContent: 1
+              }
+            }
+          ],
+          as: 'tasks'
+        }
+      }
+    ])
     const participantsPromise = ParticipantsMission.countDocuments({ missionId: id })
     const totalNftMintedPromise = ParticipantsMission.countDocuments({ missionId: id, minted: true })
 
-    const [mission, missionTasks, participants, totalNftMinted] = await Promise.all([missionPromise, missionTasksPromise, participantsPromise, totalNftMintedPromise])
-
+    const [arrMission, participants, totalNftMinted] = await Promise.all([missionPromise, participantsPromise, totalNftMintedPromise])
+    const mission = arrMission[0]
     if (!mission) {
       req.response = { errMess: `notFoundMissionId:${id}` }
       return next()
     }
     const tasks = {}
-    tasks.data = missionTasks.length ? missionTasks.map(task => ({ _id: task._id, ...get(task, 'taskContent', []) })) : []
+    const missionTasks = get(mission, 'tasks', [])
+    tasks.data = missionTasks
     tasks.totalTasks = missionTasks.length
     if (userAddress && tasks.data.length) {
       const userCompletedTasks = await TaskHistory.find({ nftProfileAddress: userAddress, completed: true, isActive: true }, { missionTasksId: 1 }).lean()
@@ -388,20 +412,23 @@ export default class MissionWorker {
     }
     req.response = {
       tasks,
-      status: getStatusTime(mission.startTime, mission.endTime),
-      missionName: mission.missionName,
-      missionAvatar: mission.missionAvatar,
-      startTime: mission.startTime,
-      endTime: mission.endTime,
-      chain: mission.chain,
-      contractAddress: mission.collectionAddress,
-      participants,
-      missionDescription: mission.missionDescription,
-      rewardDescription: mission.rewardDescription,
-      rewardImages: mission.rewardImageExample,
-      rewardUrl: mission.rewardUri,
-      totalNFT: mission.totalRewards,
-      totalNFTMinted: totalNftMinted
+      mission: {
+        _id: mission._id.toString(),
+        status: getStatusTime(mission.startTime, mission.endTime),
+        missionName: mission.missionName,
+        missionAvatar: mission.missionAvatar,
+        startTime: mission.startTime,
+        endTime: mission.endTime,
+        chain: mission.chain,
+        contractAddress: mission.collectionAddress,
+        participants,
+        missionDescription: mission.missionDescription,
+        rewardDescription: mission.rewardDescription,
+        rewardImages: mission.rewardImageExample,
+        rewardUrl: mission.rewardUri,
+        totalNFT: mission.totalRewards,
+        totalNFTMinted: totalNftMinted
+      }
     }
     next()
   }

@@ -3,6 +3,7 @@ import bigdecimal from 'bigdecimal'
 import redis from 'redis'
 import numeral from 'numbro'
 import slug from 'slug'
+import { Types } from 'mongoose'
 const clientRedis = redis.createClient()
 
 export const validatePassword = (pw) => {
@@ -263,3 +264,5 @@ export const getStatusTime = (startTime, endTime) => {
     return 'active'
   }
 }
+
+export const ObjectId = Types.ObjectId
