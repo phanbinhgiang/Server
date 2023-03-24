@@ -7,6 +7,7 @@ import { get } from 'lodash'
 import TaskHistory from '../../../model/dagora/mission/TaskHistory'
 import { CHECK_STATUS } from '../../constants'
 import { COLLECTION_NAME } from '../../../../common/constants'
+import { id } from 'ethers/lib/utils'
 export default class MissionWorker {
   static async setupMissionAndTasks (req, res, next) {
     const { inSequence, mission, tasks } = req.body
@@ -241,7 +242,7 @@ export default class MissionWorker {
         return next()
       }
 
-      matchQuery._id = { $in: missionTasks.map(task => task._id) }
+      matchQuery._id = { $in: missionTasks.map(task => new ObjectId(task._id)) }
     }
 
     if (status && userAddress) {
@@ -270,11 +271,11 @@ export default class MissionWorker {
       }
 
       if (matchQuery._id) {
-        const listMissionIdsRequirements = matchQuery._id.$in || []
-        const listMissionIdsStatus = participantsMissions.map(task => task._id)
-        matchQuery._id = { $in: listMissionIdsStatus.filter(item => listMissionIdsRequirements.includes(item)) }
+        const listMissionIdsRequirements = matchQuery._id.$in.map(item => item.toString())
+        const listMissionIdsStatus = participantsMissions.map(task => task._id.toString())
+        matchQuery._id = { $in: listMissionIdsStatus.filter(item => listMissionIdsRequirements.includes(item)).map(item => new ObjectId(item)) }
       } else {
-        matchQuery._id = { $in: participantsMissions.map(task => task._id) }
+        matchQuery._id = { $in: participantsMissions.map(task => new ObjectId(task._id)) }
       }
     }
 
@@ -291,16 +292,45 @@ export default class MissionWorker {
       // totalRewards: 1,
       chain: 1,
       startTime: 1,
-      endTime: 1
+      endTime: 1,
       // isActive: 1,
-      // createdAt: 1,
+      createdAt: 1
       // updatedAt: 1
     }
-    const payload = await Mission.find(matchQuery, fieldsResponse)
-      .sort({ createdAt })
-      .skip(genSkipNum(page, size))
-      .limit(parseInt(size))
-      .lean()
+    // const payload = await Mission.find(matchQuery, fieldsResponse)
+    //   .sort({ createdAt })
+    //   .skip(genSkipNum(page, size))
+    //   .limit(parseInt(size))
+    //   .lean()
+
+    const lookupMissionTasks = {
+      from: COLLECTION_NAME.MissionTask,
+      let: { refId: '$_id' },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $eq: ['$missionId', { $toString: '$$refId' }] }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 }
+          }
+        }
+      ],
+      as: 'tasks'
+    }
+    const skip = genSkipNum(page, size)
+    const limit = parseInt(size)
+    const payload = await Mission.aggregate([
+      { $match: matchQuery },
+      { $project: fieldsResponse },
+      { $lookup: lookupMissionTasks },
+      { $sort: { createdAt: parseInt(createdAt) } },
+      { $skip: skip },
+      { $limit: limit }
+    ])
 
     if (!payload.length) {
       req.response = {
@@ -331,27 +361,13 @@ export default class MissionWorker {
       }
     }
 
-    const totalMissingTasks = await MissionTask.aggregate([
-      {
-        $match: {
-          missionId: { $in: payloadFilterStatus.map(item => item._id.toString()) }
-        }
-      },
-      {
-        $group: {
-          _id: '$missionId',
-          total: { $sum: 1 }
-        }
-      }
-    ])
-
     const payloadFormat = payloadFilterStatus.map(item => ({
       _id: item._id,
       missionName: item.missionName,
       missionAvatar: item.missionAvatar,
       rewardImage: item.rewardImageExample,
       chain: item.chain,
-      totalTasks: totalMissingTasks.length ? get(totalMissingTasks.find(task => task._id === item._id.toString()), 'total', 0) : 0,
+      totalTasks: get(item.tasks[0], 'total', 0),
       status: item.status
     }))
 
