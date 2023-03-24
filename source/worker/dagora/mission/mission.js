@@ -7,7 +7,6 @@ import { get } from 'lodash'
 import TaskHistory from '../../../model/dagora/mission/TaskHistory'
 import { CHECK_STATUS } from '../../constants'
 import { COLLECTION_NAME } from '../../../../common/constants'
-import { id } from 'ethers/lib/utils'
 export default class MissionWorker {
   static async setupMissionAndTasks (req, res, next) {
     const { inSequence, mission, tasks } = req.body
@@ -297,11 +296,6 @@ export default class MissionWorker {
       createdAt: 1
       // updatedAt: 1
     }
-    // const payload = await Mission.find(matchQuery, fieldsResponse)
-    //   .sort({ createdAt })
-    //   .skip(genSkipNum(page, size))
-    //   .limit(parseInt(size))
-    //   .lean()
 
     const lookupMissionTasks = {
       from: COLLECTION_NAME.MissionTask,
@@ -323,6 +317,8 @@ export default class MissionWorker {
     }
     const skip = genSkipNum(page, size)
     const limit = parseInt(size)
+
+    const totalData = await Mission.countDocuments(matchQuery)
     const payload = await Mission.aggregate([
       { $match: matchQuery },
       { $project: fieldsResponse },
@@ -373,8 +369,8 @@ export default class MissionWorker {
 
     req.response = {
       data: payloadFormat,
-      total: payloadFormat.length,
-      totalPage: Math.ceil(payloadFormat.length / parseInt(size)),
+      total: totalData,
+      totalPage: Math.ceil(totalData / parseInt(size)),
       currentPage: parseInt(page)
     }
     next()
