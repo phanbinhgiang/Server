@@ -1,8 +1,7 @@
 import MissionTask from '../../../model/dagora/mission/MissionTask'
 import Mission from '../../../model/dagora/mission/Mission'
 import { checkInvalidRequireField, genUpdate, genSkipNum } from '../../function'
-
-export default class MissionWorker {
+export default class MissionTaskWorker {
   static async getAllMissionTask (req, res, next) {
     const {
       page = 1, size = 10, missionId

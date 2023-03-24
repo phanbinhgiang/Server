@@ -20,6 +20,7 @@ export const defaultModel = {
   stringUnique: { type: String, required: true, unique: true },
   array: { type: Array, default: [] },
   number: { type: Number, default: 0 },
+  numberNotDefault: { type: Number },
   boolean: { type: Boolean, default: true },
   booleanFalse: { type: Boolean, default: false },
   object: { type: Object, default: {} },

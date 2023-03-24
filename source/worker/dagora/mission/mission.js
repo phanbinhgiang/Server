@@ -7,6 +7,197 @@ import { get } from 'lodash'
 import TaskHistory from '../../../model/dagora/mission/TaskHistory'
 
 export default class MissionWorker {
+  static async setupMissionAndTasks (req, res, next) {
+    const { inSequence, mission, tasks } = req.body
+
+    // Setup Mission
+    if (!mission) {
+      req.response = { errMess: 'requiredMission' }
+      return next()
+    }
+
+    const requiredFieldsMission = [
+      'partnerId',
+      'collectionAddress',
+      'missionName',
+      'missionDescription',
+      'missionAvatar',
+      'rewardImageExample',
+      'rewardDescription',
+      'rewardUri',
+      'totalRewards',
+      'chain',
+      'startTime',
+      'endTime'
+    ]
+
+    const missingRequireFieldMission = checkInvalidRequireField(requiredFieldsMission, mission)
+    if (missingRequireFieldMission) {
+      req.response = { errMess: `missingRequireFieldMission:${missingRequireFieldMission}` }
+      return next()
+    }
+
+    const { partnerId } = mission
+    const findPartnerId = await Partner.countDocuments({ _id: partnerId })
+    if (!findPartnerId) {
+      req.response = { errMess: 'notFoundPartnerId' }
+      return next()
+    }
+
+    const { missionName } = mission
+    const missionId = createSlug(missionName)
+    const findMission = await Mission.findOne({ id: missionId })
+    if (findMission) {
+      req.response = { errMess: 'missionNameExists' }
+      return next()
+    }
+
+    const bodyMission = genUpdate(mission, [
+      'partnerId',
+      'collectionAddress',
+      'missionName',
+      'missionDescription',
+      'missionAvatar',
+      'rewardImageExample',
+      'rewardDescription',
+      'rewardUri',
+      'totalRewards',
+      'chain',
+      'startTime',
+      'endTime'
+    ])
+
+    bodyMission.id = missionId
+
+    // Setup Tasks
+    if (!get(tasks, 'length')) {
+      req.response = { errMess: 'requiredTasks' }
+      return next()
+    }
+
+    const requiredFieldsTask = [
+      'taskTypeId',
+      'taskContent'
+    ]
+
+    const missingRequireFieldTask = tasks.find(task => checkInvalidRequireField(requiredFieldsTask, task))
+
+    if (missingRequireFieldTask) {
+      req.response = { errMess: 'missingRequireFieldTask' }
+      return next()
+    }
+
+    // Create Mission and Tasks
+    const createMission = await Mission.create(bodyMission)
+
+    const bodyTasks = tasks.map((task, index) => {
+      const bodyTask = genUpdate(task, [
+        'taskTypeId',
+        'taskContent'
+      ])
+
+      bodyTask.missionId = createMission._id.toString()
+
+      if (inSequence) {
+        bodyTask.order = index + 1
+      }
+
+      return bodyTask
+    })
+    await MissionTask.insertMany(bodyTasks)
+
+    req.response = true
+    next()
+  }
+
+  static async updateMissionAndTasksById (req, res, next) {
+    const { id } = req.params
+    const { inSequence, mission, tasks } = req.body
+
+    if (!id) {
+      req.response = { errMess: 'requiredId' }
+      return next()
+    }
+
+    if (mission) {
+      const { missionName } = mission
+      if (missionName) {
+        const genSlug = createSlug(missionName)
+        const countSlugExists = await Mission.countDocuments({ id: genSlug, _id: { $ne: id } })
+        if (countSlugExists) {
+          req.response = { errMess: 'missionNameExists' }
+          return next()
+        }
+      }
+    }
+
+    const findMission = await Mission.findOne({ _id: id })
+    if (!findMission) {
+      req.response = { errMess: `notFoundMissionId:${id}` }
+      return next()
+    }
+
+    // Update Tasks
+    if (get(tasks, 'length')) {
+      const requiredFieldsTask = [
+        'taskTypeId',
+        'taskContent'
+      ]
+
+      const missingRequireFieldTask = tasks.find(task => checkInvalidRequireField(requiredFieldsTask, task))
+
+      if (missingRequireFieldTask) {
+        req.response = { errMess: 'missingRequireFieldTask' }
+        return next()
+      }
+
+      await MissionTask.deleteMany({ missionId: id })
+
+      const bodyTasks = tasks.map((task, index) => {
+        const bodyTask = genUpdate(task, [
+          'taskTypeId',
+          'taskContent'
+        ])
+
+        bodyTask.missionId = id
+
+        if (inSequence) {
+          bodyTask.order = index + 1
+        }
+
+        return bodyTask
+      })
+      await MissionTask.insertMany(bodyTasks)
+    }
+
+    // Update Mission
+    if (mission) {
+      const updatedFiled = genUpdate(mission, [
+        'partnerId',
+        'collectionAddress',
+        'missionName',
+        'missionDescription',
+        'missionAvatar',
+        'rewardImageExample',
+        'rewardDescription',
+        'rewardUri',
+        'totalRewards',
+        'chain',
+        'startTime',
+        'endTime'
+      ])
+
+      const { missionName } = mission
+      if (missionName) {
+        updatedFiled.id = createSlug(missionName)
+      }
+      await findMission.updateOne(updatedFiled)
+    }
+
+    req.response = true
+    next()
+  }
+
   static async getAllMission (req, res, next) {
     const {
       page = 1, size = 10, key, chain, createdAt = -1, type, requirements, status, userAddress

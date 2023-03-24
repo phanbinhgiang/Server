@@ -3,8 +3,8 @@ import { MissionWorker } from '../../../worker'
 const router = express.Router()
 
 // Admin
-router.post('/admx', MissionWorker.createMission)
-router.put('/admx', MissionWorker.updateMission)
+router.post('/admx', MissionWorker.setupMissionAndTasks)
+router.put('/admx/item/:id', MissionWorker.updateMissionAndTasksById)
 router.delete('/admx/item/:id', MissionWorker.deleteMissionById)
 
 // User
