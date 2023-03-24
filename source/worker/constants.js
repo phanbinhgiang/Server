@@ -460,3 +460,9 @@ export const DEFAULT_NETWORK_PROFILE = [
     chainId: '31337'
   }
 ]
+
+export const CHECK_STATUS = {
+  upcoming: 'upcoming',
+  active: 'active',
+  ended: 'ended'
+}

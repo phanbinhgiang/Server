@@ -5,6 +5,7 @@ import ParticipantsMission from '../../../model/dagora/mission/ParticipantsMissi
 import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum, getStatusTime } from '../../function'
 import { get } from 'lodash'
 import TaskHistory from '../../../model/dagora/mission/TaskHistory'
+import { CHECK_STATUS } from '../../constants'
 
 export default class MissionWorker {
   static async setupMissionAndTasks (req, res, next) {
@@ -212,28 +213,8 @@ export default class MissionWorker {
     }
 
     if (chain) {
-      matchQuery.chain = chain
-    }
-
-    if (type) {
-      const currentTime = new Date()
-      switch (type) {
-      case 'active':
-        matchQuery.startTime = { $lte: currentTime }
-        matchQuery.endTime = { $gte: currentTime }
-        break
-
-      case 'upcoming':
-        matchQuery.startTime = { $gt: currentTime }
-        break
-
-      case 'ended':
-        matchQuery.endTime = { $lt: currentTime }
-        break
-
-      default:
-        break
-      }
+      const arrChain = chain.replaceAll(' ', '').split(',').filter(item => item)
+      matchQuery.chain = { $in: arrChain }
     }
 
     if (requirements) {
@@ -297,7 +278,6 @@ export default class MissionWorker {
       }
     }
 
-    const totalData = await Mission.countDocuments(matchQuery)
     const fieldsResponse = {
       // id: 1,
       // partnerId: 1,
@@ -332,10 +312,29 @@ export default class MissionWorker {
       return next()
     }
 
+    let payloadFilterStatus = payload.map(item => ({ ...item, status: getStatusTime(item.startTime, item.endTime) }))
+
+    if (type) {
+      const arrType = type.replaceAll(' ', '').split(',').map(item => CHECK_STATUS[item]).filter((value, index, self) => value && self.indexOf(value) === index)
+      if (arrType.length) {
+        payloadFilterStatus = payloadFilterStatus.filter(item => arrType.includes(item.status))
+      }
+
+      if (!payloadFilterStatus.length) {
+        req.response = {
+          data: [],
+          total: 0,
+          totalPage: 0,
+          currentPage: parseInt(page)
+        }
+        return next()
+      }
+    }
+
     const totalMissingTasks = await MissionTask.aggregate([
       {
         $match: {
-          missionId: { $in: payload.map(item => item._id.toString()) }
+          missionId: { $in: payloadFilterStatus.map(item => item._id.toString()) }
         }
       },
       {
@@ -346,20 +345,20 @@ export default class MissionWorker {
       }
     ])
 
-    const payloadFormat = payload.map(item => ({
+    const payloadFormat = payloadFilterStatus.map(item => ({
       _id: item._id,
       missionName: item.missionName,
       missionAvatar: item.missionAvatar,
       rewardImage: item.rewardImageExample,
       chain: item.chain,
       totalTasks: totalMissingTasks.length ? get(totalMissingTasks.find(task => task._id === item._id.toString()), 'total', 0) : 0,
-      status: getStatusTime(item.startTime, item.endTime)
+      status: item.status
     }))
 
     req.response = {
       data: payloadFormat,
-      total: totalData,
-      totalPage: Math.ceil(totalData / parseInt(size)),
+      total: payloadFormat.length,
+      totalPage: Math.ceil(payloadFormat.length / parseInt(size)),
       currentPage: parseInt(page)
     }
     next()

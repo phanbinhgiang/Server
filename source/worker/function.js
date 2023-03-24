@@ -257,7 +257,7 @@ export const getStatusTime = (startTime, endTime) => {
   const currentTime = new Date()
   if (currentTime < startTime) {
     return 'upcoming'
-  } else if (currentTime > endTime) {
+  } else if (currentTime > endTime && endTime) {
     return 'ended'
   } else {
     return 'active'
