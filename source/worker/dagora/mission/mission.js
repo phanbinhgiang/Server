@@ -320,6 +320,8 @@ export default class MissionWorker {
         default:
           break
         }
+
+        arrMatchQuery = matchQuery
       }
 
       if (arrType.length === 2) {
