@@ -6,7 +6,7 @@ import { checkInvalidRequireField, createSlug, genUpdate, genSkipNum, getStatusT
 import { get } from 'lodash'
 import TaskHistory from '../../../model/dagora/mission/TaskHistory'
 import { CHECK_STATUS } from '../../constants'
-import { COLLECTION_NAME } from '../../../../common/constants'
+import { COLLECTION_NAME, MISSION_PARTICIPANT_STATUS } from '../../../../common/constants'
 export default class MissionWorker {
   static async setupMissionAndTasks (req, res, next) {
     const { inSequence, mission, tasks } = req.body
@@ -204,6 +204,8 @@ export default class MissionWorker {
       page = 1, size = 10, key, chain, createdAt = -1, type, requirements, status, userAddress
     } = req.query
 
+    let arrMatchQuery
+
     const matchQuery = {
       isActive: true
     }
@@ -218,10 +220,11 @@ export default class MissionWorker {
     }
 
     if (requirements) {
+      const arrTypeChain = requirements.replaceAll(' ', '').split(',').filter(item => item)
       const missionTasks = await MissionTask.aggregate([
         {
           $match: {
-            taskTypeId: requirements
+            taskTypeId: { $in: arrTypeChain }
           }
         },
         {
@@ -245,11 +248,12 @@ export default class MissionWorker {
     }
 
     if (status && userAddress) {
-      const participantsMissions = await ParticipantsMission.aggregate([
+      const arrStatus = status.replaceAll(' ', '').split(',').filter(item => MISSION_PARTICIPANT_STATUS[item])
+      let participantsMissions = await ParticipantsMission.aggregate([
         {
           $match: {
             nftProfileAddress: userAddress,
-            status
+            status: { $in: arrStatus }
           }
         },
         {
@@ -258,6 +262,22 @@ export default class MissionWorker {
           }
         }
       ])
+      if (status.includes('notStarted')) {
+        const userNotParticipantsMissions = await ParticipantsMission.aggregate([
+          {
+            $match: {
+              nftProfileAddress: { $ne: userAddress }
+            }
+          },
+          {
+            $group: {
+              _id: '$missionId'
+            }
+          }
+        ])
+
+        participantsMissions = participantsMissions.concat(userNotParticipantsMissions)
+      }
 
       if (!participantsMissions.length) {
         req.response = {
@@ -275,6 +295,59 @@ export default class MissionWorker {
         matchQuery._id = { $in: listMissionIdsStatus.filter(item => listMissionIdsRequirements.includes(item)).map(item => new ObjectId(item)) }
       } else {
         matchQuery._id = { $in: participantsMissions.map(task => new ObjectId(task._id)) }
+      }
+    }
+
+    arrMatchQuery = { ...matchQuery }
+    if (type) {
+      const arrType = type.replaceAll(' ', '').split(',').map(item => CHECK_STATUS[item]).filter((value, index, self) => value && self.indexOf(value) === index)
+      if (arrType.length === 1) {
+        const currentTime = new Date()
+        switch (arrType[0]) {
+        case 'active':
+          matchQuery.startTime = { $lte: currentTime }
+          matchQuery.endTime = { $gte: currentTime }
+          break
+
+        case 'upcoming':
+          matchQuery.startTime = { $gt: currentTime }
+          break
+
+        case 'ended':
+          matchQuery.endTime = { $lt: currentTime }
+          break
+
+        default:
+          break
+        }
+      }
+
+      if (arrType.length === 2) {
+        const currentTime = new Date()
+        if (!arrType.includes('active')) {
+          arrMatchQuery = {
+            $or: [
+              { ...matchQuery, startTime: { $gt: currentTime } },
+              { ...matchQuery, endTime: { $lt: currentTime } }
+            ]
+          }
+        }
+        if (!arrType.includes('upcoming')) {
+          arrMatchQuery = {
+            $or: [
+              { ...matchQuery, startTime: { $lte: currentTime }, endTime: { $gte: currentTime } },
+              { ...matchQuery, endTime: { $lt: currentTime } }
+            ]
+          }
+        }
+        if (!arrType.includes('ended')) {
+          arrMatchQuery = {
+            $or: [
+              { ...matchQuery, startTime: { $lte: currentTime }, endTime: { $gte: currentTime } },
+              { ...matchQuery, startTime: { $gt: currentTime } }
+            ]
+          }
+        }
       }
     }
 
@@ -297,36 +370,14 @@ export default class MissionWorker {
       // updatedAt: 1
     }
 
-    const lookupMissionTasks = {
-      from: COLLECTION_NAME.MissionTask,
-      let: { refId: '$_id' },
-      pipeline: [
-        {
-          $match: {
-            $expr: { $eq: ['$missionId', { $toString: '$$refId' }] }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: 1 }
-          }
-        }
-      ],
-      as: 'tasks'
-    }
-    const skip = genSkipNum(page, size)
-    const limit = parseInt(size)
+    const totalDataPromise = await Mission.countDocuments(arrMatchQuery)
 
-    const totalData = await Mission.countDocuments(matchQuery)
-    const payload = await Mission.aggregate([
-      { $match: matchQuery },
-      { $project: fieldsResponse },
-      { $lookup: lookupMissionTasks },
-      { $sort: { createdAt: parseInt(createdAt) } },
-      { $skip: skip },
-      { $limit: limit }
-    ])
+    const payloadPromise = await Mission.find(arrMatchQuery, fieldsResponse)
+      .sort({ createdAt: parseInt(createdAt) })
+      .skip(genSkipNum(page, size))
+      .limit(parseInt(size))
+
+    const [totalData, payload] = await Promise.all([totalDataPromise, payloadPromise])
 
     if (!payload.length) {
       req.response = {
@@ -338,33 +389,28 @@ export default class MissionWorker {
       return next()
     }
 
-    let payloadFilterStatus = payload.map(item => ({ ...item, status: getStatusTime(item.startTime, item.endTime) }))
-
-    if (type) {
-      const arrType = type.replaceAll(' ', '').split(',').map(item => CHECK_STATUS[item]).filter((value, index, self) => value && self.indexOf(value) === index)
-      if (arrType.length) {
-        payloadFilterStatus = payloadFilterStatus.filter(item => arrType.includes(item.status))
-      }
-
-      if (!payloadFilterStatus.length) {
-        req.response = {
-          data: [],
-          total: 0,
-          totalPage: 0,
-          currentPage: parseInt(page)
+    const totalMissingTasks = await MissionTask.aggregate([
+      {
+        $match: {
+          missionId: { $in: payload.map(item => item._id.toString()) }
         }
-        return next()
+      },
+      {
+        $group: {
+          _id: '$missionId',
+          total: { $sum: 1 }
+        }
       }
-    }
+    ])
 
-    const payloadFormat = payloadFilterStatus.map(item => ({
+    const payloadFormat = payload.map(item => ({
       _id: item._id,
       missionName: item.missionName,
       missionAvatar: item.missionAvatar,
       rewardImage: item.rewardImageExample,
       chain: item.chain,
-      totalTasks: get(item.tasks[0], 'total', 0),
-      status: item.status
+      totalTasks: totalMissingTasks.length ? get(totalMissingTasks.find(task => task._id === item._id.toString()), 'total', 0) : 0,
+      status: getStatusTime(item.startTime, item.endTime)
     }))
 
     req.response = {

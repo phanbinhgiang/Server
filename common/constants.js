@@ -5561,3 +5561,9 @@ export const COLLECTION_NAME = {
   TaskHistory: '-taskhistories',
   UserProfile: '-userprofiles'
 }
+
+export const MISSION_PARTICIPANT_STATUS = {
+  inProgress: 'inProgress',
+  finished: 'finished',
+  minted: 'minted'
+}
