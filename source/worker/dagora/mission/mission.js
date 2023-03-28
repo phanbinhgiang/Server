@@ -8,6 +8,109 @@ import TaskHistory from '../../../model/dagora/mission/TaskHistory'
 import { CHECK_STATUS } from '../../constants'
 import { COLLECTION_NAME, MISSION_PARTICIPANT_STATUS } from '../../../../common/constants'
 export default class MissionWorker {
+  // Admin
+  static async getAllMissionAdmin (req, res, next) {
+    const {
+      page = 1, size = 10, key, chain, createdAt = -1
+    } = req.query
+
+    const matchQuery = {
+      isActive: true
+    }
+
+    if (key) {
+      matchQuery.missionName = { $regex: key, $options: 'i' }
+    }
+
+    if (chain) {
+      const arrChain = chain.replaceAll(' ', '').split(',').filter(item => item)
+      matchQuery.chain = { $in: arrChain }
+    }
+
+    const fieldsResponse = {
+      // id: 1,
+      partnerId: 1,
+      // collectionAddress: 1,
+      missionName: 1,
+      // missionDescription: 1,
+      missionAvatar: 1,
+      rewardImageExample: 1,
+      // rewardDescription: 1,
+      // rewardUri: 1,
+      totalRewards: 1,
+      chain: 1,
+      startTime: 1,
+      endTime: 1,
+      // isActive: 1,
+      createdAt: 1
+      // updatedAt: 1
+    }
+
+    const totalDataPromise = Mission.countDocuments(matchQuery)
+
+    const payloadPromise = Mission.find(matchQuery, fieldsResponse)
+      .sort({ createdAt: parseInt(createdAt) })
+      .skip(genSkipNum(page, size))
+      .limit(parseInt(size))
+      .lean()
+
+    const [totalData, payload] = await Promise.all([totalDataPromise, payloadPromise])
+
+    if (!payload.length) {
+      req.response = {
+        data: [],
+        total: 0,
+        totalPage: 0,
+        currentPage: parseInt(page)
+      }
+      return next()
+    }
+
+    const partnersDataPromise = Partner.find({ _id: { $in: payload.map(item => item.partnerId) } }).lean()
+    const rewardMintedDataPromise = ParticipantsMission.aggregate([
+      {
+        $match: {
+          missionId: { $in: payload.map(item => item._id.toString()) },
+          status: MISSION_PARTICIPANT_STATUS.minted
+        }
+      },
+      {
+        $group: {
+          _id: '$missionId',
+          total: { $sum: 1 }
+        }
+      }
+    ])
+
+    const [partnersData, rewardMintedData] = await Promise.all([partnersDataPromise, rewardMintedDataPromise])
+
+    const payloadFormat = payload.map(item => {
+      const partner = partnersData.find(partner => partner._id.toString() === item.partnerId.toString())
+      const rewardMinted = rewardMintedData.find(reward => reward._id.toString() === item._id.toString())
+      return {
+        _id: item._id,
+        missionName: item.missionName,
+        missionAvatar: item.missionAvatar,
+        partnerName: partner ? partner.partnerName : '',
+        partnerLogo: partner ? partner.partnerLogo : '',
+        rewardImage: item.rewardImageExample,
+        totalRewardsMinted: rewardMinted ? rewardMinted.total : 0,
+        totalRewards: item.totalRewards,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        status: getStatusTime(item.startTime, item.endTime)
+      }
+    })
+
+    req.response = {
+      data: payloadFormat,
+      total: totalData,
+      totalPage: Math.ceil(totalData / parseInt(size)),
+      currentPage: parseInt(page)
+    }
+    next()
+  }
+
   static async setupMissionAndTasks (req, res, next) {
     const { inSequence, mission, tasks } = req.body
 
@@ -199,7 +302,8 @@ export default class MissionWorker {
     next()
   }
 
-  static async getAllMission (req, res, next) {
+  // User
+  static async getAllMissionUser (req, res, next) {
     const {
       page = 1, size = 10, key, chain, createdAt = -1, type, requirements, status, userAddress
     } = req.query
@@ -372,9 +476,9 @@ export default class MissionWorker {
       // updatedAt: 1
     }
 
-    const totalDataPromise = await Mission.countDocuments(arrMatchQuery)
+    const totalDataPromise = Mission.countDocuments(arrMatchQuery)
 
-    const payloadPromise = await Mission.find(arrMatchQuery, fieldsResponse)
+    const payloadPromise = Mission.find(arrMatchQuery, fieldsResponse)
       .sort({ createdAt: parseInt(createdAt) })
       .skip(genSkipNum(page, size))
       .limit(parseInt(size))
@@ -424,7 +528,7 @@ export default class MissionWorker {
     next()
   }
 
-  static async getMissionById (req, res, next) {
+  static async getMissionUserById (req, res, next) {
     const { id } = req.params
     const { userAddress } = req.query
     const missionPromise = await Mission.aggregate([
@@ -453,7 +557,7 @@ export default class MissionWorker {
       }
     ])
     const participantsPromise = ParticipantsMission.countDocuments({ missionId: id })
-    const totalNftMintedPromise = ParticipantsMission.countDocuments({ missionId: id, minted: true })
+    const totalNftMintedPromise = ParticipantsMission.countDocuments({ missionId: id, status: MISSION_PARTICIPANT_STATUS.minted })
 
     const [arrMission, participants, totalNftMinted] = await Promise.all([missionPromise, participantsPromise, totalNftMintedPromise])
     const mission = arrMission[0]

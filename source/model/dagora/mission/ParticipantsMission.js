@@ -6,7 +6,5 @@ export default createSchema({
   verifiedTasks: defaultModel.boolean,
   transactionHash: defaultModel.string,
   hashIsVerified: defaultModel.boolean,
-  status: defaultModel.string,
-  minted: defaultModel.booleanFalse
-
+  status: defaultModel.string
 }, '-ParticipantsMission', null, null)
