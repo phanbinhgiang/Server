@@ -8,8 +8,7 @@ export default class ParticipantMissionWorker {
   static async createParticipantMission (req, res, next) {
     const requiredFields = [
       'nftProfileAddress',
-      'missionId',
-      'transactionHash'
+      'missionId'
     ]
 
     const missingRequireField = checkInvalidRequireField(requiredFields, req.body)
