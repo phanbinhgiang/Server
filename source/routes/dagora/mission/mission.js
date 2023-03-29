@@ -1,5 +1,6 @@
 import express from 'express'
-import { MissionWorker } from '../../../worker'
+import { MissionWorker, ParticipantMissionWorker } from '../../../worker'
+
 const router = express.Router()
 
 // Admin
@@ -11,5 +12,6 @@ router.delete('/admx/item/:id', MissionWorker.deleteMissionById)
 // User
 router.get('/user/', MissionWorker.getAllMissionUser)
 router.get('/user/item/:id', MissionWorker.getMissionUserById)
+router.post('/user/participant', ParticipantMissionWorker.createParticipantMission)
 
 export default router

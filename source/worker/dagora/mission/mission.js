@@ -11,7 +11,7 @@ export default class MissionWorker {
   // Admin
   static async getAllMissionAdmin (req, res, next) {
     const {
-      page = 1, size = 10, key, chain, createdAt = -1
+      page = 1, size = 10, key, chain, sort
     } = req.query
 
     const matchQuery = {
@@ -49,7 +49,7 @@ export default class MissionWorker {
     const totalDataPromise = Mission.countDocuments(matchQuery)
 
     const payloadPromise = Mission.find(matchQuery, fieldsResponse)
-      .sort({ createdAt: parseInt(createdAt) })
+      .sort({ createdAt: sort === 'time' ? 1 : -1 })
       .skip(genSkipNum(page, size))
       .limit(parseInt(size))
       .lean()
@@ -323,7 +323,7 @@ export default class MissionWorker {
   // User
   static async getAllMissionUser (req, res, next) {
     const {
-      page = 1, size = 10, key, chain, createdAt = -1, type, requirements, status, userAddress
+      page = 1, size = 10, key, chain, sort, type, requirements, status, userAddress
     } = req.query
 
     let arrMatchQuery
@@ -385,10 +385,10 @@ export default class MissionWorker {
         }
       ])
       if (status.includes('notStarted')) {
-        const userNotParticipantsMissions = await ParticipantsMission.aggregate([
+        const userParticipantsMissions = await ParticipantsMission.aggregate([
           {
             $match: {
-              nftProfileAddress: { $ne: userAddress }
+              nftProfileAddress: userAddress
             }
           },
           {
@@ -398,7 +398,8 @@ export default class MissionWorker {
           }
         ])
 
-        participantsMissions = participantsMissions.concat(userNotParticipantsMissions)
+        const missionNotParticipant = await Mission.find({ _id: { $nin: userParticipantsMissions.map(item => item._id) } }, { _id: 1 }).lean()
+        participantsMissions = participantsMissions.concat(missionNotParticipant)
       }
 
       if (!participantsMissions.length) {
@@ -497,7 +498,7 @@ export default class MissionWorker {
     const totalDataPromise = Mission.countDocuments(arrMatchQuery)
 
     const payloadPromise = Mission.find(arrMatchQuery, fieldsResponse)
-      .sort({ createdAt: parseInt(createdAt) })
+      .sort({ createdAt: sort === 'time' ? 1 : -1 })
       .skip(genSkipNum(page, size))
       .limit(parseInt(size))
 

@@ -90,7 +90,7 @@
         "deprecated": false
       }
     },
-    "/dagora/activity": {
+    "/": {
       "post": {
         "tags": [
           "Listing NFT"
@@ -177,10 +177,555 @@
         },
         "deprecated": false
       }
+    },
+    "/mission/admx": {
+      "get": {
+        "tags": [
+          "Mission Admin"
+        ],
+        "summary": "Get List Mission Admin filtered by name, chain",
+        "operationId": "Get List Mission Admin filtered by name, chain",
+        "parameters": [
+          {  
+            "name":"key",
+            "in":"query",
+            "description":"Keyword name of List Mission filter (example: abc)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"chain",
+            "in":"query",
+            "description":"List Chains (example: solana, binanceSmart)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"page",
+            "in":"query",
+            "description":"Page number of List Mission filter returns (default page = 1)",
+            "required":false,
+            "type":"number"
+          },
+          {  
+            "name":"size",
+            "in":"query",
+            "description":"Size of page of List Mission filter returns (default size = 10)",
+            "required":false,
+            "type":"number"
+          },
+          {  
+            "name":"sort",
+            "in":"query",
+            "description":"Sort by time ( newest: -time, oldest: time)",
+            "required":false,
+            "type":"number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "Mission Admin"
+        ],
+        "summary": "Create mission and setup mission tasks",
+        "operationId": "Create mission and setup mission tasks",
+        "parameters": [],
+        "requestBody": {
+          "description": "Data for Mission and Mission Tasks",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSetupMissionDocumentRequest"
+              },
+              "example": {
+                "inSequence": true,
+                "mission": {
+                    "partnerId": "641990ee27e5a924f2393b6f",
+                    "collectionAddress":"Kyteck",
+                    "missionName":"Kyteck",
+                    "missionDescription":"joining",
+                    "missionAvatar": "avatar",
+                    "rewardImageExample": "image",
+                    "rewardDescription": "reward",
+                    "rewardUri" : "reward uri",
+                    "totalRewards" : "150",
+                    "chain" :"binanceSmart",
+                    "startTime" : "2023-03-18 08:33:27.124Z",
+                    "endTime": "2023-05-25 08:33:27.124Z"
+                },
+                "tasks": [
+                    {
+                        "taskTypeId": "onChain",
+                        "taskContent" : {
+                            "flatform" : "fb",
+                            "flatformImage" : "image fb",
+                            "taskName" : "follow",
+                            "taskDescription" : "follow 10 people on fb",
+                            "taskConfiguration" : {}
+                        }
+                    },
+                    {
+                      "taskTypeId": "onChain",
+                      "taskContent" : {
+                          "flatform" : "youtube",
+                          "flatformImage" : "image youtube",
+                          "taskName" : "follow",
+                          "taskDescription" : "follow 10 people on youtube",
+                          "taskConfiguration" : {}
+                      }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/mission/admx/item/{id}": {
+      "put": {
+        "tags": [
+          "Mission Admin"
+        ],
+        "summary": "Update mission and setup mission tasks",
+        "operationId": "Update mission and setup mission tasks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ObjectId Mission (_id)",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "requestBody": {
+          "description": "Data for Mission and Mission Tasks",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "inSequence": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "mission": {
+                    "$ref":"#/components/schemas/CreateMissionDocumentRequest"
+                  },
+                  "tasks": {
+                    "$ref":"#/components/schemas/CreateMissionTaskDocumentRequest"
+                  }
+                }
+              },
+              "example": {
+                "inSequence": true,
+                "mission": {
+                    "partnerId": "641990ee27e5a924f2393b6f",
+                    "collectionAddress":"Kyteck",
+                    "missionName":"Kyteck",
+                    "missionDescription":"joining",
+                    "missionAvatar": "avatar",
+                    "rewardImageExample": "image",
+                    "rewardDescription": "reward",
+                    "rewardUri" : "reward uri",
+                    "totalRewards" : "150",
+                    "chain" :"binanceSmart",
+                    "startTime" : "2023-03-18 08:33:27.124Z",
+                    "endTime": "2023-05-25 08:33:27.124Z"
+                },
+                "tasks": [
+                    {
+                        "taskTypeId": "onChain",
+                        "taskContent" : {
+                            "flatform" : "fb",
+                            "flatformImage" : "image fb",
+                            "taskName" : "follow",
+                            "taskDescription" : "follow 10 people on fb",
+                            "taskConfiguration" : {}
+                        }
+                    },
+                    {
+                      "taskTypeId": "onChain",
+                      "taskContent" : {
+                          "flatform" : "youtube",
+                          "flatformImage" : "image youtube",
+                          "taskName" : "follow",
+                          "taskDescription" : "follow 10 people on youtube",
+                          "taskConfiguration" : {}
+                      }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/mission/user": {
+      "get": {
+        "tags": [
+          "Mission User"
+        ],
+        "summary": "Get List Mission User filtered by name, chain, type, requirements, status",
+        "operationId": "Get List Mission User filtered by name, chain, type, requirements, status",
+        "parameters": [
+          {  
+            "name":"key",
+            "in":"query",
+            "description":"Keyword name of List Mission filter (example: abc)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"chain",
+            "in":"query",
+            "description":"List Chains (example: solana, binanceSmart)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"type",
+            "in":"query",
+            "description":"List type (example: active, upcoming, ended)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"requirements",
+            "in":"query",
+            "description":"List requirements (example: onChain, offChain)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"status",
+            "in":"query",
+            "description":"List status (example: notStarted, inProgress, finished, minted)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"userAddress",
+            "in":"query",
+            "description":"userAddress (example: 123)",
+            "required":false,
+            "type":"string"
+          },
+          {  
+            "name":"page",
+            "in":"query",
+            "description":"Page number of List Mission filter returns (default page = 1)",
+            "required":false,
+            "type":"number"
+          },
+          {  
+            "name":"size",
+            "in":"query",
+            "description":"Size of page of List Mission filter returns (default size = 10)",
+            "required":false,
+            "type":"number"
+          },
+          {  
+            "name":"sort",
+            "in":"query",
+            "description":"Sort by time ( newest: -time, oldest: time)",
+            "required":false,
+            "type":"number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/mission/user/item/{id}": {
+      "get": {
+        "tags": [
+          "Mission User"
+        ],
+        "summary": "Get Detail Mission User By ID",
+        "operationId": "Get Detail Mission User By ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ObjectId Mission (_id)",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/mission/user/participant": {
+      "post": {
+        "tags": [
+          "Mission User"
+        ],
+        "summary": "Create Participant Mission",
+        "operationId": "Create Participant Mission",
+        "requestBody": {
+          "description": "Participant Mission",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nftProfileAddress",
+                  "missionId"
+                ],
+                "properties": {
+                  "nftProfileAddress": {
+                    "type": "string",
+                    "example": "userAddress2"
+                  },
+                  "missionId": {
+                    "type": "string",
+                    "example": "641d5ba888d19e57a3450d03"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
     }
   },
   "components": {
-    "schemas": {},
+    "schemas": {
+      "CreateSetupMissionDocumentRequest": {
+        "title": "CreateSetupMissionDocumentRequest",
+        "required": [
+          "mission",
+          "tasks"
+        ],
+        "type": "object",
+        "properties": {
+          "inSequence": {
+            "type": "boolean"
+          },
+          "mission": {
+            "$ref": "#/components/schemas/CreateMissionDocumentRequest"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateMissionTaskDocumentRequest"
+            }
+          }
+        },
+        "example": {
+          "inSequence": true,
+          "mission": {
+              "partnerId": "641990ee27e5a924f2393b6f",
+              "collectionAddress":"Kyteck",
+              "missionName":"Kyteck",
+              "missionDescription":"joining",
+              "missionAvatar": "avatar",
+              "rewardImageExample": "image",
+              "rewardDescription": "reward",
+              "rewardUri" : "reward uri",
+              "totalRewards" : "150",
+              "chain" :"binanceSmart",
+              "startTime" : "2023-03-18 08:33:27.124Z",
+              "endTime": "2023-05-25 08:33:27.124Z"
+          },
+          "tasks": [
+              {
+                  "taskTypeId": "onChain",
+                  "taskContent" : {
+                      "flatform" : "fb",
+                      "flatformImage" : "image fb",
+                      "taskName" : "follow",
+                      "taskDescription" : "follow 10 people on fb",
+                      "taskConfiguration" : {}
+                  }
+              },
+              {
+                "taskTypeId": "onChain",
+                "taskContent" : {
+                    "flatform" : "youtube",
+                    "flatformImage" : "image youtube",
+                    "taskName" : "follow",
+                    "taskDescription" : "follow 10 people on youtube",
+                    "taskConfiguration" : {}
+                }
+            }
+          ]
+        }
+      },
+      "CreateMissionDocumentRequest": {
+        "title": "CreateMissionDocumentRequest",
+          "required": [
+            "partnerId",
+            "collectionAddress",
+            "missionName",
+            "missionDescription",
+            "missionAvatar",
+            "rewardImageExample",
+            "rewardDescription",
+            "rewardUri" ,
+            "totalRewards" ,
+            "chain" ,
+            "startTime"
+          ],
+          "type": "object",
+          "properties": {
+            "partnerId": {
+              "type": "string"
+            },
+            "collectionAddress": {
+              "type": "string"
+            },
+            "missionName": {
+              "type": "string"
+            },
+            "missionDescription": {
+              "type": "string"
+            },
+            "missionAvatar": {
+              "type": "string"
+            },
+            "rewardImageExample": {
+              "type": "string"
+            },
+            "rewardDescription": {
+              "type": "string"
+            },
+            "rewardUri": {
+              "type": "string"
+            },
+            "totalRewards": {
+              "type": "string"
+            },
+            "chain": {
+              "type": "string"
+            },
+            "startTime": {
+              "type": "string"
+            },
+            "endTime": {
+              "type": "string"
+            }
+          },
+          "example": {
+            "partnerId": "641990ee27e5a924f2393b6f",
+            "collectionAddress":"Kyteck",
+            "missionName":"Kyteck",
+            "missionDescription":"joining",
+            "missionAvatar": "avatar",
+            "rewardImageExample": "image",
+            "rewardDescription": "reward",
+            "rewardUri" : "reward uri",
+            "totalRewards" : "150",
+            "chain" :"binanceSmart",
+            "startTime" : "2023-03-18 08:33:27.124Z",
+            "endTime": "2023-05-25 08:33:27.124Z"
+          }
+      },
+      "CreateMissionTaskDocumentRequest": {
+        "title": "CreateMissionTaskDocumentRequest",
+        "required": [
+          "taskTypeId",
+          "taskContent"
+        ],
+        "type": "object",
+        "properties": {
+          "taskTypeId": {
+            "type": "string"
+          },
+          "taskContent": {
+            "$ref": "#/components/schemas/CreateTaskContentDocumentRequest"
+          }
+        },
+        "example": {
+          "taskTypeId": "onChain",
+          "taskContent" : {
+              "flatform" : "youtube",
+              "flatformImage" : "image youtube",
+              "taskName" : "follow",
+              "taskDescription" : "follow 10 people on youtube",
+              "taskConfiguration" : {}
+          }
+        }
+      },
+      "CreateTaskContentDocumentRequest": {
+        "title": "CreateTaskContentDocumentRequest",
+        "required": [
+          "flatform",
+          "flatformImage",
+          "taskName",
+          "taskDescription",
+          "taskConfiguration" 
+
+        ],
+        "type": "object",
+        "properties": {
+          "flatform": {
+            "type": "string"
+          },
+          "flatformImage": {
+            "type": "string"
+          },
+          "taskName": {
+            "type": "string"
+          },
+          "taskDescription": {
+            "type": "string"
+          },
+          "taskConfiguration": {
+            "type": "object"
+          }
+        },
+        "example": {
+          "flatform" : "fb",
+          "flatformImage" : "image fb",
+          "taskName" : "follow",
+          "taskDescription" : "follow 10 people on fb",
+          "taskConfiguration" : {}
+        }
+      }  
+    },
     "securitySchemes": {
       "httpBearer": {
         "type": "http",
@@ -201,6 +746,14 @@
     {
       "name": "Listing NFT",
       "description": "API for Listing NFT in DAgora marketplace"
+    },
+    {
+      "name": "Mission Admin",
+      "description": "API for create, read, update Mission of Admin"
+    },
+    {
+      "name": "Mission Admin",
+      "description": "API for create, read, update Mission of User"
     }
   ]
 }
