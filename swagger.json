@@ -225,6 +225,92 @@
         "responses": {
           "200": {
             "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "success",
+                    "status"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "data": [
+                      {
+                        "_id": "6423ba8c0579c9781dccb491",
+                        "missionName": "HVN",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "image",
+                        "totalRewardsMinted": 0,
+                        "totalRewards": 98,
+                        "startTime": "2023-03-18T08:33:27.124Z",
+                        "endTime": "2023-05-25T08:33:27.124Z",
+                        "status": "active"
+                      },
+                      {
+                        "_id": "6423b53dde51d873a1337f3c",
+                        "missionName": "Kyteck",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "image",
+                        "totalRewardsMinted": 0,
+                        "totalRewards": 150,
+                        "startTime": "2023-03-18T08:33:27.124Z",
+                        "endTime": "2023-05-25T08:33:27.124Z",
+                        "status": "active"
+                      },
+                      {
+                        "_id": "641df95acda4da3e9f188e81",
+                        "missionName": "Saros Camp",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "iamge",
+                        "totalRewardsMinted": 0,
+                        "totalRewards": 150,
+                        "startTime": "2023-01-18T08:33:27.124Z",
+                        "endTime": "2023-02-25T08:33:27.124Z",
+                        "status": "ended"
+                      },
+                      {
+                        "_id": "641d5ba888d19e57a3450d03",
+                        "missionName": "C98 Camp V2",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "iamge",
+                        "totalRewardsMinted": 2,
+                        "totalRewards": 1000,
+                        "startTime": "2023-04-18T08:33:27.124Z",
+                        "endTime": "2023-05-25T08:33:27.124Z",
+                        "status": "upcoming"
+                      }
+                    ],
+                    "total": 4,
+                    "totalPage": 1,
+                    "currentPage": 1
+                  },
+                  "success": true,
+                  "status": 200
+                }
+              }
+            },
             "headers": {}
           }
         },
@@ -263,14 +349,14 @@
                 },
                 "tasks": [
                     {
-                        "taskTypeId": "onChain",
-                        "taskContent" : {
-                            "flatform" : "fb",
-                            "flatformImage" : "image fb",
-                            "taskName" : "follow",
-                            "taskDescription" : "follow 10 people on fb",
-                            "taskConfiguration" : {}
-                        }
+                      "taskTypeId": "onChain",
+                      "taskContent" : {
+                          "flatform" : "fb",
+                          "flatformImage" : "image fb",
+                          "taskName" : "follow",
+                          "taskDescription" : "follow 10 people on fb",
+                          "taskConfiguration" : {}
+                      }
                     },
                     {
                       "taskTypeId": "onChain",
@@ -458,6 +544,92 @@
         "responses": {
           "200": {
             "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "success",
+                    "status"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "data": [
+                      {
+                        "_id": "6423ba8c0579c9781dccb491",
+                        "missionName": "HVN",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "image",
+                        "totalRewardsMinted": 0,
+                        "totalRewards": 98,
+                        "startTime": "2023-03-18T08:33:27.124Z",
+                        "endTime": "2023-05-25T08:33:27.124Z",
+                        "status": "active"
+                      },
+                      {
+                        "_id": "6423b53dde51d873a1337f3c",
+                        "missionName": "Kyteck",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "image",
+                        "totalRewardsMinted": 0,
+                        "totalRewards": 150,
+                        "startTime": "2023-03-18T08:33:27.124Z",
+                        "endTime": "2023-05-25T08:33:27.124Z",
+                        "status": "active"
+                      },
+                      {
+                        "_id": "641df95acda4da3e9f188e81",
+                        "missionName": "Saros Camp",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "iamge",
+                        "totalRewardsMinted": 0,
+                        "totalRewards": 150,
+                        "startTime": "2023-01-18T08:33:27.124Z",
+                        "endTime": "2023-02-25T08:33:27.124Z",
+                        "status": "ended"
+                      },
+                      {
+                        "_id": "641d5ba888d19e57a3450d03",
+                        "missionName": "C98 Camp V2",
+                        "missionAvatar": "avatar",
+                        "partnerName": "C98",
+                        "partnerLogo": "C98Logo",
+                        "rewardImage": "iamge",
+                        "totalRewardsMinted": 2,
+                        "totalRewards": 1000,
+                        "startTime": "2023-04-18T08:33:27.124Z",
+                        "endTime": "2023-05-25T08:33:27.124Z",
+                        "status": "upcoming"
+                      }
+                    ],
+                    "total": 4,
+                    "totalPage": 1,
+                    "currentPage": 1
+                  },
+                  "success": true,
+                  "status": 200
+                }
+              }
+            },
             "headers": {}
           }
         },
