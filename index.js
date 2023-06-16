@@ -20,7 +20,7 @@ import MiddlewareServices from './source/middleware'
 // Swagger
 import swaggerUI from 'swagger-ui-express'
 import swaggerDocument from './swagger.json'
-
+import { Server } from 'socket.io'
 const app = express()
 
 app.use(json2xls.middleware)
@@ -52,6 +52,61 @@ if (cluster.isMaster) {
   server.timeout = isOverTime ? 1000 * 60 : 1000 * 10
   // server.timeout = 2147483647
   console.log(`Worker ${process.pid} started`)
+
+  // Phòng chat
+  const rooms = []
+
+  // Connect socket
+  const io = new Server(server)
+  io.on('connection', socket => {
+  // Event join room
+    socket.on('amberblocks_join', data => {
+      const { id, room } = data
+      const socketId = id + Date.now()
+      // socket.id = socketId;
+
+      console.log(id, 'join room', room)
+
+      // Event Join room
+
+      if (rooms[room] === undefined) {
+        rooms[room] = [{ id, time: new Date() }]
+      } else {
+        rooms[room] = [...rooms[room], { id, time: new Date() }]
+        console.log('🚀 ~ file: app.js:35 ~ rooms[room]:', rooms[room])
+      }
+      socket.join(room)
+
+      io.to(room).emit('messageJoin', `${id} joined room ${room}`)
+    })
+
+    // Event publish post and out room
+    socket.on('amberblocks_update', data => {
+      const { id, room, type } = data
+
+      // Remove user from room
+      if (rooms[room]) {
+        rooms[room] = rooms[room].filter(item => item.id !== id)
+
+        // Leave room
+        socket.leave(room)
+
+        // Notify users in room
+        if (type === 'publish') {
+          io.to(room).emit('messagePublished', {
+            user: id
+          })
+        }
+      }
+    })
+
+    // Event get Room
+    socket.on('amberblocks_get', data => {
+      const { room } = data
+      console.log('get room', rooms[room] || [])
+      io.to(room).emit('getRoom', rooms[room] || [])
+    })
+  })
 }
 
 function startWorkers () {
