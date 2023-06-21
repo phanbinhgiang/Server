@@ -54,59 +54,141 @@ if (cluster.isMaster) {
   console.log(`Worker ${process.pid} started`)
 
   // Phòng chat
-  const rooms = []
+  const rooms = {}
 
   // Connect socket
   const io = new Server(server)
+
   io.on('connection', socket => {
-  // Event join room
-    socket.on('amberblocks_join', data => {
-      const { id, room } = data
-      const socketId = id + Date.now()
-      // socket.id = socketId;
+  // Lưu rooms vào socket.data
+    socket.data.rooms = rooms
 
-      console.log(id, 'join room', room)
-
-      // Event Join room
-
-      if (rooms[room] === undefined) {
-        rooms[room] = [{ id, time: new Date() }]
-      } else {
-        rooms[room] = [...rooms[room], { id, time: new Date() }]
-        console.log('🚀 ~ file: app.js:35 ~ rooms[room]:', rooms[room])
+    // Lắng nghe sự kiện đăng nhập vào phòng chat
+    socket.on('joinRoom', data => {
+      const { roomName, user } = data
+      // Nếu phòng chưa tồn tại, tạo mới
+      if (!socket.data.rooms[roomName]) {
+        socket.data.rooms[roomName] = []
       }
-      socket.join(room)
+      // Thêm người dùng vào phòng
+      socket.data.rooms[roomName].push({ id: socket.id, user: user, time: new Date() })
+      // Xác thực tên người dùng và phát thông báo cho toàn bộ phòng
+      io.to(roomName).emit('message', `Welcome ${user} to room ${roomName}`)
+      // Truy cập danh sách người dùng trong phòng
+      const usersInRoom = socket.data.rooms[roomName] // .map(socketId => io.sockets.connected[socketId].username)
+      // Cập nhật số người trong phòng
+      io.to(roomName).emit('getUsersInRoom', usersInRoom)
 
-      io.to(room).emit('messageJoin', `${id} joined room ${room}`)
+      // Tham gia phòng chat
+      socket.join(roomName)
     })
 
-    // Event publish post and out room
-    socket.on('amberblocks_update', data => {
-      const { id, room, type } = data
-
-      // Remove user from room
-      if (rooms[room]) {
-        rooms[room] = rooms[room].filter(item => item.id !== id)
-
-        // Leave room
-        socket.leave(room)
-
-        // Notify users in room
-        if (type === 'publish') {
-          io.to(room).emit('messagePublished', {
-            user: id
-          })
-        }
-      }
+    // Lắng nghe sự kiện gửi tin nhắn
+    socket.on('sendMessage', data => {
+      const { roomName, message, user } = data
+      const findUserData = socket.data.rooms[roomName].find(item => item.user === user)
+      io.to(roomName).emit('message', { user: findUserData.user, text: message })
     })
 
-    // Event get Room
-    socket.on('amberblocks_get', data => {
-      const { room } = data
-      console.log('get room', rooms[room] || [])
-      io.to(room).emit('getRoom', rooms[room] || [])
+    // Lắng nghe sự kiện đăng xuất khỏi phòng chat
+    socket.on('leaveRoom', data => {
+      const { roomName } = data
+      const findUserData = socket.data.rooms[roomName].find(item => item.id === socket.id)
+
+      // Đưa người dùng ra khỏi phòng
+      socket.data.rooms[roomName] = socket.data.rooms[roomName].filter(item => item.id !== socket.id)
+      // Cập nhật số người trong phòng
+      const usersInRoom = socket.data.rooms[roomName] // .map(socketId => io.sockets.connected[socketId].username)
+      io.to(roomName).emit('getUsersInRoom', usersInRoom)
+
+      // Rời phòng
+      socket.leave(roomName)
+      // Phát thông báo cho toàn bộ phòng
+      io.to(roomName).emit('message', `${findUserData.user} leave room ${roomName}`)
+    })
+
+    // Lắng nghe sự kiện ngắt kết nối
+    socket.on('disconnect', () => {
+    // Xóa người dùng khỏi tất cả các phòng
+      Object.keys(socket.data.rooms).forEach(roomName => {
+        const findUserData = socket.data.rooms[roomName].find(item => item.id === socket.id)
+        socket.data.rooms[roomName] = socket.data.rooms[roomName].filter(item => item.id !== socket.id)
+        // Cập nhật số người trong phòng
+        const usersInRoom = socket.data.rooms[roomName] // .map(socketId => io.sockets.connected[socketId].username)
+        io.to(roomName).emit('getUsersInRoom', usersInRoom)
+
+        // Phát thông báo cho toàn bộ phòng
+        io.to(roomName).emit('message', `${findUserData.user} disconnected`)
+      })
     })
   })
+
+  // io.on('connection', socket => {
+  // // Save data rooms to socket.data
+  //   socket.data.rooms = rooms
+
+  //   // Event join room
+  //   socket.on('amberblocks_join', data => {
+  //     const { id, room } = data
+  //     console.log(id, 'join room', room)
+
+  //     // Event Join room
+
+  //     // if room not exist,, create new room
+  //     if (!socket.data.rooms[room]) {
+  //       socket.data.rooms[room] = []
+  //     }
+
+  //     // Add user to room
+  //     socket.data.rooms[room].push({ id, time: new Date() })
+  //     socket.join(room)
+
+  //     io.to(room).emit('messageJoin', `${id} joined room ${room}`)
+  //   })
+
+  //   // Event publish post and out room
+  //   socket.on('amberblocks_update', data => {
+  //     const { id, room, type } = data
+
+  //     // Remove user from room
+  //     if (rooms[room]) {
+  //       rooms[room] = rooms[room].filter(item => item.id !== id)
+
+  //       // Leave room
+  //       socket.leave(room)
+
+  //       // Notify users in room
+  //       if (type === 'publish') {
+  //         io.to(room).emit('messagePublished', {
+  //           user: id
+  //         })
+  //       }
+  //     }
+  //   })
+
+  //   // Sent Notification Publish
+  //   socket.on('amberblocks_notification', data => {
+  //     const { room, id, name, userName } = data
+
+  //     const clients = io.sockets.adapter.rooms.get(room)
+
+  //     if (clients && clients.forEach) {
+  //       clients.forEach(function (decode) {
+  //         const decoded = decode.split(';')
+  //         if (decoded[0] && decoded[0] !== id) {
+  //           io.to(decoded[0]).emit('notificationPublish', { user: id, name, userName })
+  //         }
+  //       })
+  //     }
+  //   })
+
+  //   // Event get Room
+  //   socket.on('amberblocks_get', data => {
+  //     const { room } = data
+  //     console.log('get room', rooms[room] || [])
+  //     io.to(room).emit('getRoom', rooms[room] || [])
+  //   })
+  // })
 }
 
 function startWorkers () {
